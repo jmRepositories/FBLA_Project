@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Drag & Drop Game</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f6f8;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      p {
+        font-size: 18px;
+        margin-bottom: 30px;
+      }
+
+      .gameContainer {
+        display: flex;
+        gap: 60px;
+        width: 100%;
+        padding: 40px;
+        justify-content: space-between;
+        background-color: powderblue;
+      }
+
+      .pieces {
+        display: flex;
+        gap: 25px;
+        margin-bottom: 30px;
+        justify-content: flex-end;
+        width: 100%;
+      }
+
+      .piece {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        cursor: grab;
+        user-select: none;
+        background: burlywood;
+        border: 2px solid #333;
+        animation-name: slide; /* Name of the keyframes rule */
+        animation-duration: 6s; /* Duration of the animation */
+        animation-fill-mode: forwards; /* Keeps the element at the end position */
+        animation-timing-function: steps(1000);
+        position: absolute;
+        z-index: 1;
+      }
+
+      .piece:active {
+        cursor: grabbing;
+        transform: scale(1.05);
+        border-color: blue;
+      }
+
+      .drop-zone {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        background: white;
+        border: 3px dashed #999;
+        border-radius: 10px;
+      }
+
+      .drop-zone.hovered {
+        border-color: #2196f3;
+        background: rgba(33, 150, 243, 0.15);
+      }
+
+      .truckHolder {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .dropOffTruck {
+        width: 300px;
+        height: 240px;
+        background-image: url("LoadingTruck.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        position: relative;
+      }
+
+      .dropOffTruck .drop-zone {
+        position: absolute;
+        left: 110px;
+        top: 40px;
+      }
+      .packageDropper {
+        display: grid;
+        grid-template-rows: 1fr 1fr 1fr;
+        justify-items: center;
+        /* border: 3px solid red; */
+        max-width: 800px;
+      }
+      .conveyor {
+        width: 700px;
+        transform: scaleX(-1);
+        user-select: none;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      @keyframes slide {
+        20% {
+          transform: translateY(200px);
+        }
+        40% {
+          transform: translateY(200px) translateX(-350px);
+        }
+        60% {
+          transform: translateY(200px) translateX(-700px);
+        }
+        80% {
+          transform: translateY(400px) translateX(-700px);
+        }
+        100% {
+          transform: translateY(400px) translateX(var(--x));
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="gameContainer">
+      <!-- Trucks -->
+      <div class="truckHolder">
+        <div class="dropOffTruck">
+          <div class="drop-zone" data-accept="Danger">⚠️</div>
+        </div>
+        <div class="dropOffTruck">
+          <div class="drop-zone" data-accept="Basic">📦</div>
+        </div>
+        <div class="dropOffTruck">
+          <div class="drop-zone" data-accept="Fragile">💎</div>
+        </div>
+      </div>
+      <!-- Boxes -->
+      <div class="packageDropper">
+        <div class="scoreBoard">
+          <h1>Score:</h1>
+          <p>00</p>
+        </div>
+        <div class="pieces"></div>
+        <img src="conveyor-anim1.webp" class="conveyor" />
+        <p>Match each Box to the correct loading zone</p>
+      </div>
+    </div>
+
+    <script>
+      const piecesContainer = document.querySelector(".pieces");
+      const zones = document.querySelectorAll(".drop-zone");
+      const scoreBoard = document.querySelector(".scoreBoard p");
+      let piecesCount = piecesContainer.querySelectorAll(".piece").length;
+
+      let draggedPiece = null;
+      let score = 0;
+
+      function updateScore() {
+        score++;
+        scoreBoard.textContent = score.toString().padStart(2, "0");
+      }
+
+      /* --------------------
+         DRAGGABLE PIECES
+      -------------------- */
+      function makeDraggable(piece) {
+        piece.addEventListener("dragstart", () => {
+          draggedPiece = piece;
+        });
+      }
+      function getRanNum(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function updatePieceCount() {
+        piecesCount = piecesContainer.querySelectorAll(".piece").length;
+      }
+
+      function createRandomPiece() {
+        const types = [
+          { type: "Basic", icon: "📦" },
+          { type: "Danger", icon: "⚠️" },
+          { type: "Fragile", icon: "💎" },
+        ];
+
+        const choice = types[Math.floor(Math.random() * types.length)];
+
+        const piece = document.createElement("div");
+        piece.className = "piece";
+        piece.draggable = true;
+        piece.dataset.type = choice.type;
+        piece.textContent = choice.icon;
+        piece.style = `--x: ${getRanNum(-50, 50) - 700}px;`;
+
+        makeDraggable(piece);
+        piecesContainer.appendChild(piece);
+        updatePieceCount();
+      }
+
+      // // Start with 3 boxes
+      // for (let i = 0; i < 3; i++) createRandomPiece();
+
+      // Generate a new box every 5 seconds
+      setInterval(createRandomPiece, 5000);
+
+      /* --------------------
+         DROP ZONES
+      -------------------- */
+      zones.forEach((zone) => {
+        zone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          zone.classList.add("hovered");
+        });
+
+        zone.addEventListener("dragleave", () => {
+          zone.classList.remove("hovered");
+        });
+
+        zone.addEventListener("drop", () => {
+          zone.classList.remove("hovered");
+
+          if (!draggedPiece) return;
+
+          const pieceType = draggedPiece.dataset.type;
+          const acceptedType = zone.dataset.accept;
+
+          if (pieceType === acceptedType) {
+            draggedPiece.remove();
+            updateScore();
+          } else {
+            alert("❌ Wrong match!");
+          }
+
+          draggedPiece = null;
+        });
+      });
+    </script>
+  </body>
+</html>
