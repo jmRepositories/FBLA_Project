@@ -155,9 +155,36 @@
       </div>
       <!-- Boxes -->
       <div class="packageDropper">
-        <div class="scoreBoard">
-          <h1>Score:</h1>
-          <p>00</p>
+        <div
+          class="scoreBoard"
+          style="display: flex; justify-content: space-around; width: 80%"
+        >
+          <div style="text-align: center">
+            <h2>Press Play</h2>
+            <div
+              style="display: flex; justify-content: space-around; padding: 5px"
+            >
+              <button
+                style="background-color: green; color: white"
+                onclick="startInterval()"
+              >
+                Start
+              </button>
+              <button
+                style="background-color: red; color: white"
+                onclick="stopInterval()"
+              >
+                Stop
+              </button>
+            </div>
+            <div>
+              <p id="difficultyText">Current Difficulty: ...</p>
+            </div>
+          </div>
+          <div>
+            <h1>Score:</h1>
+            <p id="CurretScore">00</p>
+          </div>
         </div>
         <div class="pieces"></div>
         <img src="conveyor-anim1.webp" class="conveyor" />
@@ -168,8 +195,10 @@
     <script>
       const piecesContainer = document.querySelector(".pieces");
       const zones = document.querySelectorAll(".drop-zone");
-      const scoreBoard = document.querySelector(".scoreBoard p");
+      const scoreBoard = document.getElementById("CurretScore");
+      const difficultyText = document.getElementById("difficultyText");
       let piecesCount = piecesContainer.querySelectorAll(".piece").length;
+      let creation;
 
       let draggedPiece = null;
       let score = 0;
@@ -219,8 +248,32 @@
       // // Start with 3 boxes
       // for (let i = 0; i < 3; i++) createRandomPiece();
 
-      // Generate a new box every 5 seconds
-      setInterval(createRandomPiece, 5000);
+      //Calculate the difficulty & change it
+      function startInterval() {
+        creation = setInterval(createRandomPiece, 3000);
+        difficultyText.innerHTML = `Current Difficulty: Easy`;
+      }
+      function changeDifficulty() {
+        let num = 3000 - score * 10;
+        if (score > 10) {
+        }
+        if (10 <= score > 25) {
+          difficultyText.innerHTML = `Current Difficulty: Easy`;
+          clearInterval(creation);
+          creation = setInterval(createRandomPiece, num);
+        } else if (25 < score >= 50) {
+          difficultyText.innerHTML = `Current Difficulty: Medium`;
+          clearInterval(creation);
+          creation = setInterval(createRandomPiece, num - 500);
+        } else {
+          difficultyText.innerHTML = `Current Difficulty: Hard`;
+          clearInterval(creation);
+          creation = setInterval(createRandomPiece, num - 1000);
+        }
+      }
+      function stopInterval() {
+        clearInterval(creation);
+      }
 
       /* --------------------
          DROP ZONES
@@ -246,6 +299,7 @@
           if (pieceType === acceptedType) {
             draggedPiece.remove();
             updateScore();
+            changeDifficulty();
           } else {
             alert("❌ Wrong match!");
           }
