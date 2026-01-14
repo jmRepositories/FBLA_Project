@@ -257,11 +257,11 @@
         let num = 3000 - score * 10;
         if (score > 10) {
         }
-        if (10 <= score > 25) {
+        if (score <= 10) {
           difficultyText.innerHTML = `Current Difficulty: Easy`;
           clearInterval(creation);
           creation = setInterval(createRandomPiece, num);
-        } else if (25 < score >= 50) {
+        } else if (score <= 25) {
           difficultyText.innerHTML = `Current Difficulty: Medium`;
           clearInterval(creation);
           creation = setInterval(createRandomPiece, num - 500);
@@ -310,3 +310,4 @@
     </script>
   </body>
 </html>
+
